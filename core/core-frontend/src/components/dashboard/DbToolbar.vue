@@ -892,7 +892,11 @@ const initOpenHandler = newWindow => {
   color: #ffffff;
   &:hover {
     color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: #ffffff1a !important;
+  }
+  &:active {
+    color: #ffffff;
+    background-color: #ffffff33 !important;
   }
 }
 
