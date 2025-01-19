@@ -309,22 +309,25 @@ public class ChartDataServer implements ChartDataApi {
     public static void setExcelData(Sheet detailsSheet, CellStyle cellStyle, Object[] header, List<Object[]> details, ViewDetailField[] detailFields, Integer[] excelTypes, Comment comment, ChartViewDTO viewInfo, Workbook wb) {
         List<CellStyle> styles = new ArrayList<>();
         List<ChartViewFieldDTO> xAxis = new ArrayList<>();
-        if (viewInfo.getType().equalsIgnoreCase("table-normal")) {
-            xAxis.addAll(viewInfo.getXAxis());
-            xAxis.addAll(viewInfo.getYAxis());
-        }
-        if (viewInfo.getType().equalsIgnoreCase("table-info")) {
-            xAxis.addAll(viewInfo.getXAxis());
-        }
-        for (ChartViewFieldDTO xAxi : xAxis) {
-            if (xAxi.getDeType().equals(DeTypeConstants.DE_INT) || xAxi.getDeType().equals(DeTypeConstants.DE_FLOAT)) {
-                FormatterCfgDTO formatterCfgDTO = xAxi.getFormatterCfg() == null ? new FormatterCfgDTO() : xAxi.getFormatterCfg();
-                CellStyle formatterCellStyle = createCellStyle(wb, formatterCfgDTO, null);
-                styles.add(formatterCellStyle);
-            } else {
-                styles.add(null);
+
+        xAxis.addAll(viewInfo.getXAxis());
+        xAxis.addAll(viewInfo.getYAxis());
+        xAxis.addAll(viewInfo.getXAxisExt());
+        xAxis.addAll(viewInfo.getYAxisExt());
+        xAxis.addAll(viewInfo.getExtStack());
+
+        if (viewInfo.getType().equalsIgnoreCase("table-normal") || viewInfo.getType().equalsIgnoreCase("table-info")) {
+            for (ChartViewFieldDTO xAxi : xAxis) {
+                if (xAxi.getDeType().equals(DeTypeConstants.DE_INT) || xAxi.getDeType().equals(DeTypeConstants.DE_FLOAT)) {
+                    FormatterCfgDTO formatterCfgDTO = xAxi.getFormatterCfg() == null ? new FormatterCfgDTO() : xAxi.getFormatterCfg();
+                    CellStyle formatterCellStyle = createCellStyle(wb, formatterCfgDTO, null);
+                    styles.add(formatterCellStyle);
+                } else {
+                    styles.add(null);
+                }
             }
         }
+
         boolean mergeHead = false;
         if (ArrayUtils.isNotEmpty(detailFields)) {
             cellStyle.setBorderTop(BorderStyle.THIN);
@@ -410,7 +413,7 @@ public class ChartDataServer implements ChartDataApi {
                             detailsSheet.setColumnWidth(j, 255 * 20);
                         } else if (cellValObj != null) {
                             try {
-                                if (wb != null && (xAxis.get(j).getDeType().equals(DeTypeConstants.DE_INT) || xAxis.get(j).getDeType().equals(DeTypeConstants.DE_FLOAT))) {
+                                if ((viewInfo.getType().equalsIgnoreCase("table-normal") || viewInfo.getType().equalsIgnoreCase("table-info")) && (xAxis.get(j).getDeType().equals(DeTypeConstants.DE_INT) || xAxis.get(j).getDeType().equals(DeTypeConstants.DE_FLOAT))) {
                                     try {
                                         FormatterCfgDTO formatterCfgDTO = xAxis.get(j).getFormatterCfg() == null ? new FormatterCfgDTO() : xAxis.get(j).getFormatterCfg();
                                         if (formatterCfgDTO.getType().equalsIgnoreCase("auto")) {
@@ -431,7 +434,6 @@ public class ChartDataServer implements ChartDataApi {
                                         cell.setCellValue(cellValObj.toString());
                                     }
                                 }
-
                             } catch (Exception e) {
                                 LogUtil.warn("export excel data transform error");
                             }
@@ -439,8 +441,14 @@ public class ChartDataServer implements ChartDataApi {
                             if (!viewInfo.getType().equalsIgnoreCase("circle-packing")) {
                                 Map<String, Object> senior = viewInfo.getSenior();
                                 ChartSeniorFunctionCfgDTO functionCfgDTO = JsonUtil.parseObject((String) JsonUtil.toJSONString(senior.get("functionCfg")), ChartSeniorFunctionCfgDTO.class);
-                                if (StringUtils.isNotEmpty(functionCfgDTO.getEmptyDataStrategy()) && functionCfgDTO.getEmptyDataStrategy().equalsIgnoreCase("setZero") && functionCfgDTO.getEmptyDataFieldCtrl().contains(xAxis.get(j).getDataeaseName())) {
-                                    cell.setCellValue(0);
+                                if (functionCfgDTO != null && StringUtils.isNotEmpty(functionCfgDTO.getEmptyDataStrategy()) && functionCfgDTO.getEmptyDataStrategy().equalsIgnoreCase("setZero")) {
+                                    if ((viewInfo.getType().equalsIgnoreCase("table-normal") || viewInfo.getType().equalsIgnoreCase("table-info"))) {
+                                        if (functionCfgDTO.getEmptyDataFieldCtrl().contains(xAxis.get(j).getDataeaseName())) {
+                                            cell.setCellValue(0);
+                                        }
+                                    } else {
+                                        cell.setCellValue(0);
+                                    }
                                 }
                             }
                         }
