@@ -8,7 +8,7 @@
     trigger="click"
     class="userViewEnlarge-class"
   >
-    <template #header>
+    <template #header v-if="!isIframe">
       <div class="header-title">
         <div>{{ viewInfo?.title }}</div>
         <div class="export-button">
@@ -27,7 +27,6 @@
               />
             </el-option-group>
           </el-select>
-
           <el-button
             class="m-button"
             v-if="optType === 'enlarge' && exportPermissions[0]"
@@ -178,7 +177,7 @@ const { t } = useI18n()
 const optType = ref(null)
 const chartComponentDetails = ref(null)
 const chartComponentDetails2 = ref(null)
-const { dvInfo, editMode } = storeToRefs(dvMainStore)
+const { dvInfo, editMode, isIframe } = storeToRefs(dvMainStore)
 const exportLoading = ref(false)
 const sourceViewType = ref()
 const activeName = ref('left')
